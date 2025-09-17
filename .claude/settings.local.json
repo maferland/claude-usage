@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm tauri:*)",
+      "Bash(node:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git init:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
