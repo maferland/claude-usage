@@ -8,7 +8,6 @@ A native desktop application built with Tauri that monitors your Claude API usag
 - **System Tray Integration**: Always-visible cost display in your system tray with quick access menu
 - **Daily & Weekly Trends**: Visual charts showing usage patterns over the past 7 days
 - **Background Monitoring**: Runs quietly in the background, hiding to tray instead of closing
-- **Cross-platform**: Built with Tauri for native performance on macOS, Windows, and Linux
 
 ## Requirements
 
