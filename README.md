@@ -136,8 +136,47 @@ pnpm dev
 
 ## License
 
-[License information to be added]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
-[Contributing guidelines to be added]
+We welcome contributions to Claude Usage Monitor! Here's how you can help:
+
+### Getting Started
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `pnpm test` (if available)
+5. Build the app: `pnpm tauri build`
+6. Commit your changes: `git commit -m 'Add amazing feature'`
+7. Push to your branch: `git push origin feature/amazing-feature`
+8. Open a Pull Request
+
+### Development Guidelines
+
+- **Code Style**: Follow existing TypeScript/Rust conventions
+- **Testing**: Ensure your changes don't break existing functionality
+- **Documentation**: Update README.md if you add new features
+- **Commit Messages**: Use clear, descriptive commit messages
+
+### Types of Contributions
+
+- 🐛 **Bug Fixes**: Report or fix issues with the application
+- ✨ **Features**: Add new functionality or improve existing features
+- 📚 **Documentation**: Improve docs, add examples, or clarify usage
+- 🎨 **UI/UX**: Enhance the user interface or user experience
+- ⚡ **Performance**: Optimize code or reduce resource usage
+
+### Reporting Issues
+
+When reporting bugs, please include:
+- Operating system and version
+- Steps to reproduce the issue
+- Expected vs actual behavior
+- Console logs or error messages
+- Screenshots if applicable
+
+### Questions?
+
+Feel free to open an issue for questions about development, usage, or feature requests.
