@@ -5,9 +5,11 @@ export type TabType = 'dashboard' | 'settings' | 'trends';
 interface TabNavigationProps {
   currentTab: TabType;
   onTabChange: (tab: TabType) => void;
+  onRefresh: () => void;
+  loading: boolean;
 }
 
-const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab, onTabChange }) => {
+const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab, onTabChange, onRefresh, loading }) => {
   const tabs = [
     { id: 'dashboard' as TabType, label: 'Dashboard', icon: <DashboardIcon /> },
     { id: 'trends' as TabType, label: 'Trends', icon: <TrendsIcon /> },
@@ -16,16 +18,26 @@ const TabNavigation: React.FC<TabNavigationProps> = ({ currentTab, onTabChange }
 
   return (
     <div className="tab-navigation">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          className={`tab-button ${currentTab === tab.id ? 'active' : ''}`}
-          onClick={() => onTabChange(tab.id)}
-        >
-          <span className="tab-icon">{tab.icon}</span>
-          <span className="tab-label">{tab.label}</span>
-        </button>
-      ))}
+      <div className="tab-buttons">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            className={`tab-button ${currentTab === tab.id ? 'active' : ''}`}
+            onClick={() => onTabChange(tab.id)}
+          >
+            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-label">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+      <button
+        onClick={onRefresh}
+        className="icon-button refresh-button"
+        disabled={loading}
+        title={loading ? "Refreshing..." : "Refresh data"}
+      >
+        <RefreshIcon />
+      </button>
     </div>
   );
 };
@@ -47,6 +59,13 @@ const TrendsIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
     <path d="M2.5 13l6.5-6.5L12.5 10l3-3"/>
     <path d="M13 7h2v2h-2z"/>
+  </svg>
+);
+
+const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
   </svg>
 );
 

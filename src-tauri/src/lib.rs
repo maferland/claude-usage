@@ -6,6 +6,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, State, Emitter,
 };
+use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tokio::process::Command;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -153,6 +154,24 @@ async fn hide_window(app: AppHandle) -> Result<(), String> {
 async fn quit_app(app: AppHandle) -> Result<(), String> {
     app.exit(0);
     Ok(())
+}
+
+#[tauri::command]
+async fn enable_autostart(app: AppHandle) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager.enable().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn disable_autostart(app: AppHandle) -> Result<(), String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager.disable().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
+    let autostart_manager = app.autolaunch();
+    autostart_manager.is_enabled().map_err(|e| e.to_string())
 }
 
 async fn execute_ccusage_helper() -> Result<UsageData, Box<dyn std::error::Error + Send + Sync>> {
@@ -404,26 +423,30 @@ async fn restart_monitoring_timer(_app: AppHandle, _settings: AppSettings) {
 fn setup_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error + Send + Sync>> {
     // Create tray menu
     let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-    let show_item = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
-    let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+    let toggle_item = MenuItem::with_id(app, "toggle", "Show Window", true, None::<&str>)?;
+    let menu = Menu::with_items(app, &[&toggle_item, &quit_item])?;
 
     let tray = TrayIconBuilder::new()
         .title("$0.00")
         .tooltip("Claude Usage Monitor")
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .on_menu_event(|app, event| match event.id.as_ref() {
+        .on_menu_event(move |app, event| match event.id.as_ref() {
             "quit" => {
                 app.exit(0);
             }
-            "show" => {
+            "toggle" => {
                 if let Some(window) = app.get_webview_window("main") {
-                    if window.is_visible().unwrap_or(false) {
+                    let is_visible = window.is_visible().unwrap_or(false);
+                    if is_visible {
                         let _ = window.hide();
                     } else {
                         let _ = window.show();
                         let _ = window.set_focus();
                     }
+
+                    // Update menu item text
+                    update_tray_menu_text(app, !is_visible);
                 }
             }
             _ => {}
@@ -433,12 +456,16 @@ fn setup_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error + S
                 if button == MouseButton::Left && button_state == MouseButtonState::Up {
                     let app = tray.app_handle();
                     if let Some(window) = app.get_webview_window("main") {
-                        if window.is_visible().unwrap_or(false) {
+                        let is_visible = window.is_visible().unwrap_or(false);
+                        if is_visible {
                             let _ = window.hide();
                         } else {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
+
+                        // Update menu item text
+                        update_tray_menu_text(&app, !is_visible);
                     }
                 }
             }
@@ -449,10 +476,29 @@ fn setup_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error + S
     Ok(tray)
 }
 
+fn update_tray_menu_text(app: &AppHandle, will_be_visible: bool) {
+    let state = app.state::<AppState>();
+    if let Ok(mut tray_guard) = state.tray_icon.try_lock() {
+        if let Some(tray) = tray_guard.as_mut() {
+            if let (Ok(quit_item), Ok(toggle_item)) = (
+                MenuItem::with_id(app, "quit", "Quit", true, None::<&str>),
+                MenuItem::with_id(app, "toggle",
+                    if will_be_visible { "Hide Window" } else { "Show Window" },
+                    true, None::<&str>)
+            ) {
+                if let Ok(menu) = Menu::with_items(app, &[&toggle_item, &quit_item]) {
+                    let _ = tray.set_menu(Some(menu));
+                }
+            }
+        }
+    };
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .setup(|app| {
             let tray = setup_tray(app.handle()).map_err(|e| e.to_string())?;
 
@@ -464,17 +510,40 @@ pub fn run() {
 
             app.manage(state);
 
-            // Handle window close events to prevent app exit
+            // Handle window events
             if let Some(window) = app.get_webview_window("main") {
                 let window_clone = window.clone();
+                let app_clone = app.handle().clone();
                 window.on_window_event(move |event| {
-                    if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                        // Prevent the window from closing and hide it instead
-                        api.prevent_close();
-                        let _ = window_clone.hide();
+                    match event {
+                        tauri::WindowEvent::CloseRequested { api, .. } => {
+                            // Prevent the window from closing and hide it instead
+                            api.prevent_close();
+                            let _ = window_clone.hide();
+                            update_tray_menu_text(&app_clone, false);
+                        }
+                        tauri::WindowEvent::Focused(focused) => {
+                            if !focused {
+                                // Hide window when it loses focus
+                                let _ = window_clone.hide();
+                                update_tray_menu_text(&app_clone, false);
+                            }
+                        }
+                        _ => {}
                     }
                 });
             }
+
+            // Enable autostart if the setting is enabled
+            let app_handle_clone = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let state = app_handle_clone.state::<AppState>();
+                let settings = state.settings.lock().unwrap().clone();
+                if settings.auto_start {
+                    let autostart_manager = app_handle_clone.autolaunch();
+                    let _ = autostart_manager.enable();
+                }
+            });
 
             // Start the monitoring loop
             let app_handle = app.handle().clone();
@@ -490,7 +559,10 @@ pub fn run() {
             update_settings,
             show_window,
             hide_window,
-            quit_app
+            quit_app,
+            enable_autostart,
+            disable_autostart,
+            is_autostart_enabled
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

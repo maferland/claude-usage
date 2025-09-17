@@ -6,13 +6,15 @@ interface UsageDashboardProps {
   loading: boolean;
   error: string | null;
   pollingFrequency?: string;
+  onRefresh: () => void;
 }
 
 const UsageDashboard: React.FC<UsageDashboardProps> = ({
   usageData,
   loading,
   error,
-  pollingFrequency
+  pollingFrequency,
+  onRefresh
 }) => {
   if (!usageData) {
     return (
@@ -58,7 +60,17 @@ const UsageDashboard: React.FC<UsageDashboardProps> = ({
 
       {/* Today's Usage */}
       <section className="dashboard-section today-section">
-        <h2>Today's Usage</h2>
+        <div className="section-header">
+          <h2>Today's Usage</h2>
+          <button
+            onClick={onRefresh}
+            className="icon-button refresh-button"
+            disabled={loading}
+            title={loading ? "Refreshing..." : "Refresh data"}
+          >
+            <RefreshIcon />
+          </button>
+        </div>
         <div className="today-cost">
           <span className="cost-amount">{formatCurrency(usageData.today.cost)}</span>
           <span className="cost-date">{formatDate(usageData.today.date)}</span>
@@ -86,13 +98,13 @@ const UsageDashboard: React.FC<UsageDashboardProps> = ({
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="dashboard-footer">
-        <div className="last-updated">
-          Last updated: {formatTime(usageData.lastUpdated)}
-          {loading && <span className="updating-indicator">Updating...</span>}
-        </div>
-        <div className="current-mode">
+      {/* Status Information */}
+      <section className="dashboard-section status-section">
+        <div className="status-info">
+          <div className="last-updated">
+            Last updated: {formatTime(usageData.lastUpdated)}
+            {loading && <span className="updating-indicator">Updating...</span>}
+          </div>
           {pollingFrequency && (
             <div className="mode-indicator">
               <div
@@ -105,9 +117,16 @@ const UsageDashboard: React.FC<UsageDashboardProps> = ({
             </div>
           )}
         </div>
-      </footer>
+      </section>
     </div>
   );
 };
+
+const RefreshIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+  </svg>
+);
 
 export default UsageDashboard;
