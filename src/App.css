@@ -1,7 +1,8 @@
 /* macOS Native Styling for Claude Usage Monitor */
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI",
-    Roboto, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto,
+    sans-serif;
   font-size: 13px;
   line-height: 1.4;
   font-weight: 400;
@@ -188,7 +189,9 @@ body {
   justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
-  transition: background-color 0.2s, color 0.2s;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
 }
 
 .icon-button:hover {
@@ -502,7 +505,9 @@ body {
   padding: 12px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
   border: 1px solid transparent;
 }
 
@@ -632,7 +637,7 @@ body {
 
 .toggle-slider:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 20px;
   width: 20px;
   left: 2px;
@@ -726,7 +731,6 @@ input:checked + .toggle-slider:before {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
 
 /* Trends Panel */
 .trends-panel {

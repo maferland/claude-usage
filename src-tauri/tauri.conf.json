@@ -26,8 +26,7 @@
     ],
     "trayIcon": {
       "iconPath": "icons/32x32.png",
-      "iconAsTemplate": true,
-      "menuOnLeftClick": false
+      "iconAsTemplate": true
     },
     "security": {
       "csp": null

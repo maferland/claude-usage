@@ -52,7 +52,6 @@ function App() {
     }
   };
 
-
   const refreshData = async () => {
     if (!settings) return;
 
@@ -71,7 +70,6 @@ function App() {
       setLoading(false);
     }
   };
-
 
   if (loading && !usageData) {
     return (
@@ -112,6 +110,5 @@ function App() {
     </div>
   );
 }
-
 
 export default App;

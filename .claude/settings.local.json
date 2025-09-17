@@ -5,7 +5,15 @@
       "Bash(node:*)",
       "Bash(pnpm dev:*)",
       "Bash(npx tsc:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm format:check:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(pnpm rust:fmt:*)",
+      "Bash(pnpm rust:clippy:*)",
+      "Bash(pnpm format:*)",
+      "Bash(npx lint-staged:*)"
     ],
     "deny": [],
     "ask": []

@@ -4,7 +4,7 @@ use std::time::Duration;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, State, Emitter,
+    AppHandle, Emitter, Manager, State,
 };
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
 use tokio::process::Command;
@@ -93,9 +93,7 @@ pub struct AppState {
 }
 
 #[tauri::command]
-async fn get_usage_data(
-    state: State<'_, AppState>,
-) -> Result<UsageData, String> {
+async fn get_usage_data(state: State<'_, AppState>) -> Result<UsageData, String> {
     match execute_ccusage_helper().await {
         Ok(data) => {
             *state.usage_data.lock().unwrap() = Some(data.clone());
@@ -324,7 +322,7 @@ async fn execute_ccusage_helper() -> Result<UsageData, Box<dyn std::error::Error
     "#;
 
     let output = Command::new("node")
-        .args(&["--input-type=module", "-e", &script])
+        .args(["--input-type=module", "-e", script])
         .output()
         .await?;
 
@@ -333,10 +331,7 @@ async fn execute_ccusage_helper() -> Result<UsageData, Box<dyn std::error::Error
         // Only treat it as an error if there's actual stderr content indicating a real error
         // ccusage often outputs warnings to stderr that we should ignore
         if !stderr_str.trim().is_empty() && !stderr_str.contains("WARN") {
-            return Err(format!(
-                "Helper script failed: {}",
-                stderr_str
-            ).into());
+            return Err(format!("Helper script failed: {}", stderr_str).into());
         }
     }
 
@@ -350,8 +345,13 @@ async fn execute_ccusage_helper() -> Result<UsageData, Box<dyn std::error::Error
         .find(|line| line.trim().starts_with('{'))
         .ok_or("No JSON found in output")?;
 
-    let usage_data: UsageData = serde_json::from_str(json_line.trim())
-        .map_err(|e| format!("JSON parsing error: {} - JSON: {}", e, json_line.trim().chars().take(500).collect::<String>()))?;
+    let usage_data: UsageData = serde_json::from_str(json_line.trim()).map_err(|e| {
+        format!(
+            "JSON parsing error: {} - JSON: {}",
+            e,
+            json_line.trim().chars().take(500).collect::<String>()
+        )
+    })?;
 
     Ok(usage_data)
 }
@@ -367,7 +367,10 @@ async fn update_tray_icon(app: AppHandle, usage_data: &UsageData) {
             // Update tooltip with more info
             let tooltip = if let Some(ref session) = usage_data.session {
                 if session.is_active {
-                    format!("Today: {} | Session: ${:.2} (Active)", cost_text, session.cost)
+                    format!(
+                        "Today: {} | Session: ${:.2} (Active)",
+                        cost_text, session.cost
+                    )
                 } else {
                     format!("Today: {} | Session: ${:.2}", cost_text, session.cost)
                 }
@@ -451,8 +454,13 @@ fn setup_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error + S
             }
             _ => {}
         })
-        .on_tray_icon_event(|tray, event| match event {
-            TrayIconEvent::Click { button, button_state, .. } => {
+        .on_tray_icon_event(|tray, event| {
+            if let TrayIconEvent::Click {
+                button,
+                button_state,
+                ..
+            } = event
+            {
                 if button == MouseButton::Left && button_state == MouseButtonState::Up {
                     let app = tray.app_handle();
                     if let Some(window) = app.get_webview_window("main") {
@@ -465,11 +473,10 @@ fn setup_tray(app: &AppHandle) -> Result<TrayIcon, Box<dyn std::error::Error + S
                         }
 
                         // Update menu item text
-                        update_tray_menu_text(&app, !is_visible);
+                        update_tray_menu_text(app, !is_visible);
                     }
                 }
             }
-            _ => {}
         })
         .build(app)?;
 
@@ -482,9 +489,17 @@ fn update_tray_menu_text(app: &AppHandle, will_be_visible: bool) {
         if let Some(tray) = tray_guard.as_mut() {
             if let (Ok(quit_item), Ok(toggle_item)) = (
                 MenuItem::with_id(app, "quit", "Quit", true, None::<&str>),
-                MenuItem::with_id(app, "toggle",
-                    if will_be_visible { "Hide Window" } else { "Show Window" },
-                    true, None::<&str>)
+                MenuItem::with_id(
+                    app,
+                    "toggle",
+                    if will_be_visible {
+                        "Hide Window"
+                    } else {
+                        "Show Window"
+                    },
+                    true,
+                    None::<&str>,
+                ),
             ) {
                 if let Ok(menu) = Menu::with_items(app, &[&toggle_item, &quit_item]) {
                     let _ = tray.set_menu(Some(menu));
@@ -498,7 +513,10 @@ fn update_tray_menu_text(app: &AppHandle, will_be_visible: bool) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
+        .plugin(tauri_plugin_autostart::init(
+            MacosLauncher::LaunchAgent,
+            Some(vec!["--minimized"]),
+        ))
         .setup(|app| {
             let tray = setup_tray(app.handle()).map_err(|e| e.to_string())?;
 

@@ -25,7 +25,7 @@ export class TauriAPI {
 
   static async listenForUsageUpdates(callback: (data: UsageData) => void) {
     try {
-      return await listen('usage-updated', (event) => {
+      return await listen('usage-updated', event => {
         callback(event.payload as UsageData);
       });
     } catch (error) {

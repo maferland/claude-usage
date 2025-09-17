@@ -22,12 +22,14 @@ A native desktop application built with Tauri that monitors your Claude API usag
 ### Development Setup
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd claude-usage
    ```
 
 2. Install dependencies:
+
    ```bash
    pnpm install
    ```
@@ -90,15 +92,18 @@ Enable auto-start to have the application launch automatically when your system 
 ### Common Issues
 
 **"No usage data available"**
+
 - Ensure `bunx ccusage --json` works in your terminal
 - Verify your Claude API credentials are properly configured
 - Check that you have an active internet connection
 
 **Window won't close**
+
 - This is by design - the application hides to the system tray instead of closing
 - Right-click the system tray icon and select "Quit" to fully exit
 
 **Data showing $0.00**
+
 - This usually indicates ccusage isn't returning valid data
 - Try running `bunx ccusage` manually to verify it's working
 - Check the application logs for any error messages
@@ -171,6 +176,7 @@ We welcome contributions to Claude Usage Monitor! Here's how you can help:
 ### Reporting Issues
 
 When reporting bugs, please include:
+
 - Operating system and version
 - Steps to reproduce the issue
 - Expected vs actual behavior
